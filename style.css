@@ -45,12 +45,12 @@ body {
     justify-content: center;
 }
 
-/* Fix the mirroring issue */
+/* This ensures the video display is mirrored so it acts like a mirror for the user */
 #video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transform: scaleX(-1); /* Normal, not mirrored */
+    transform: scaleX(-1); /* This is correct - mirrored for display only */
 }
 
 #canvas {
@@ -178,56 +178,6 @@ body {
     display: none;
 }
 
-/* Frame style options */
-.frame-options {
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.frame-option {
-    border: 2px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 70px;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.frame-option:hover {
-    border-color: var(--primary);
-}
-
-.frame-option.selected {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(232, 121, 249, 0.4);
-}
-
-.frame-preview {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-@media (max-width: 768px) {
-    .photo-strip {
-        max-width: 240px;
-    }
-}
-
-.form-select:focus, .btn:focus {
-    box-shadow: 0 0 0 0.25rem rgba(165, 180, 252, 0.5);
-    border-color: var(--primary);
-}
-
 /* Color palette styling */
 .color-options {
     margin-top: 15px;
@@ -256,4 +206,21 @@ body {
 .color-option.selected {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(232, 121, 249, 0.4);
+}
+
+/* Make the first color option selected by default */
+.color-palette .color-option:first-child {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(232, 121, 249, 0.4);
+}
+
+@media (max-width: 768px) {
+    .photo-strip {
+        max-width: 240px;
+    }
+}
+
+.form-select:focus, .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(165, 180, 252, 0.5);
+    border-color: var(--primary);
 }
