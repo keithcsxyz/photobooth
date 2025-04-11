@@ -27,21 +27,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize camera
     async function initCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user' }, 
-                audio: false 
-            });
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'user' }, // Front-facing camera
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+
+            // Attempt to access the camera
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
-            
+
             // Set canvas dimensions once video metadata is loaded
             video.onloadedmetadata = () => {
-                // Set canvas dimensions to match video's natural dimensions
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
             };
         } catch (err) {
             console.error("Error accessing camera:", err);
-            alert("Unable to access camera. Please ensure camera permissions are granted.");
+
+            // Fallback for unsupported constraints
+            if (err.name === "OverconstrainedError") {
+                alert("The requested camera settings are not supported by your device.");
+            } else if (err.name === "NotAllowedError") {
+                alert("Camera access was denied. Please allow camera permissions.");
+            } else if (err.name === "NotFoundError") {
+                alert("No camera found on this device.");
+            } else {
+                alert("An unexpected error occurred while accessing the camera.");
+            }
         }
     }
 
