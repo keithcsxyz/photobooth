@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoStripContainer = document.getElementById('photoStripContainer');
     const colorOptions = document.querySelectorAll('.color-option');
     const stripCtx = stripCanvas.getContext('2d');
-    const ctx = canvas.getContext('2d'); // Initialize canvas context
+    const ctx = canvas.getContext('2d');
     
     let photosTaken = 0;
     let photosToTake = 1;
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         option.addEventListener('click', () => {
             colorOptions.forEach(o => o.classList.remove('selected'));
             option.classList.add('selected');
-            selectedFrameColor = option.dataset.color; // Update only the output frame background color
+            selectedFrameColor = option.dataset.color;
         });
     });
 
@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 audio: false 
             });
             video.srcObject = stream;
+            
+            // Set canvas dimensions once video metadata is loaded
+            video.onloadedmetadata = () => {
+                // Set canvas dimensions to match video's natural dimensions
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            };
         } catch (err) {
             console.error("Error accessing camera:", err);
             alert("Unable to access camera. Please ensure camera permissions are granted.");
@@ -54,14 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearInterval(countdown);
                     timer.style.display = 'none';
 
-                    // Capture image (not mirrored)
-                    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation matrix
+                    // Correct the mirroring effect in the captured photo
+                    ctx.save();
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Flip horizontally to counter the CSS transform
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    ctx.restore();
+                    
                     const photoUrl = canvas.toDataURL('image/png');
-
-                    // Store captured photo URL
                     capturedPhotos.push(photoUrl);
-
                     resolve();
                 }
             }, 1000);
@@ -76,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set strip dimensions based on number of photos
         const stripWidth = 300;
-        const photoHeight = 200;
+        const photoHeight = 225; // Using 4:3 ratio (300 × 0.75 = 225)
         const gap = 10;
         const stripHeight = photoHeight * capturedPhotos.length + gap * (capturedPhotos.length - 1) + 100;
 
@@ -89,8 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stripCtx.fillRect(0, 0, stripWidth, stripHeight);
 
         // Draw header
-        stripCtx.fillStyle = 'linear-gradient(90deg, #a5b4fc, #f0abfc)';
-        stripCtx.fillRect(stripWidth * 0.2, 0, stripWidth * 0.6, 8);
+        const gradientHeight = 8;
+        stripCtx.fillStyle = '#a5b4fc';
+        stripCtx.fillRect(stripWidth * 0.2, 0, stripWidth * 0.6, gradientHeight);
 
         // Draw title
         stripCtx.fillStyle = '#374151';
@@ -104,7 +116,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = new Image();
                 img.onload = () => {
                     const y = 50 + index * (photoHeight + gap);
-                    stripCtx.drawImage(img, 0, y, stripWidth, photoHeight);
+                    
+                    // Maintain aspect ratio when drawing the image
+                    const aspectRatio = img.width / img.height;
+                    let drawWidth = stripWidth;
+                    let drawHeight = stripWidth / aspectRatio;
+                    
+                    // If the height is too tall, constrain to photoHeight
+                    if (drawHeight > photoHeight) {
+                        drawHeight = photoHeight;
+                        drawWidth = photoHeight * aspectRatio;
+                    }
+                    
+                    // Center the image if it's not using the full width
+                    const xOffset = (stripWidth - drawWidth) / 2;
+                    stripCtx.drawImage(img, xOffset, y, drawWidth, drawHeight);
+                    
                     resolve();
                 };
                 img.src = photoUrl;
